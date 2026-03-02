@@ -1,4 +1,4 @@
-// cd C:\Users\nicol\OneDrive\Desktop\Programmieren\Einkaufsliste2\einkaufsliste-ts
+﻿// cd C:\Users\nicol\OneDrive\Desktop\Programmieren\Einkaufsliste2\einkaufsliste-ts
 // npm start
 
 
@@ -38,6 +38,8 @@ export default function App() {
   const [recipes, setRecipes] = useState<SimpleDoc[]>([]);
 
   const [input, setInput] = useState("");
+  const [menuInput, setMenuInput] = useState("");
+  const [recipeInput, setRecipeInput] = useState("");
 
 
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -69,7 +71,7 @@ const [recipeLinkInput, setRecipeLinkInput] = useState("");
 
 
 
-  // 🔐 Auth
+  // ?? Auth
   useEffect(() => {
     return onAuthStateChanged(auth, setUser);
   }, []);
@@ -222,20 +224,22 @@ useEffect(() => {
   };
 
   // ➕ Menü
-  const addMenu = async (p0: string) => {
-    const name = prompt("Name des Menüs:");
+  const addMenu = async () => {
+    const name = menuInput.trim();
     if (!name) return;
     await addDoc(collection(db, "users", user.uid, "menus"), { name });
+    setMenuInput("");
   };
 
   // ➕ Rezept
-  const addRecipe = async (p0: string) => {
-    const name = prompt("Name des Rezepts:");
+  const addRecipe = async () => {
+    const name = recipeInput.trim();
     if (!name) return;
     await addDoc(collection(db, "users", user.uid, "recipes"), { name });
+    setRecipeInput("");
   };
 
-  // 🔁 Rezept → Menü
+  // ?? Rezept ? MenÃ¼
 const recipeToMenu = async (recipe: SimpleDoc) => {
   const menuRef = await addDoc(
     collection(db, "users", user.uid, "menus"),
@@ -267,7 +271,7 @@ const recipeToMenu = async (recipe: SimpleDoc) => {
 
   
 
-  // 🔁 Menü → Einkaufsliste
+  // ?? MenÃ¼ ? Einkaufsliste
   const menuToShopping = async (menu: SimpleDoc) => {
     const products = await getDocs(
       collection(db, "users", user.uid, "menus", menu.id, "products")
@@ -346,7 +350,7 @@ const addMenuProduct = async () => {
   setMenuProductInput("");
 };
 
-// ✏️ Menü-Produkt umbenennen
+// ?? MenÃ¼-Produkt umbenennen
 const updateMenuProductName = async (productId: string) => {
   if (!selectedMenu || !editValue) return;
 
@@ -367,7 +371,7 @@ const updateMenuProductName = async (productId: string) => {
   setEditValue("");
 };
 
-// 🗑️ Menü-Produkt löschen
+// ??? MenÃ¼-Produkt lÃ¶schen
 const deleteMenuProduct = async (productId: string) => {
   if (!selectedMenu) return;
 
@@ -427,7 +431,7 @@ const addMenuLink = async () => {
   setMenuLinkInput("");
 };
 
-// ✏️ Link bearbeiten
+// ?? Link bearbeiten
 const updateMenuLink = async (linkId: string) => {
   if (!selectedMenu || !editValue) return;
 
@@ -448,7 +452,7 @@ const updateMenuLink = async (linkId: string) => {
   setEditValue("");
 };
 
-// 🗑️ Link löschen
+// ??? Link lÃ¶schen
 const deleteMenuLink = async (linkId: string) => {
   if (!selectedMenu) return;
 
@@ -622,7 +626,7 @@ return (
                   💾
                 </button>
                 <button onClick={() => setEditingId(null)} className="delete">
-                  ❌
+                  ?
                 </button>
               </>
             ) : (
@@ -654,9 +658,17 @@ return (
     {/* ===================== 📅 MENÜS ===================== */}
     {page === "menus" && !selectedMenu && (
       <div className="menus-container">
-        <button onClick={() => addMenu("Neues Menü")} className="add-button">
-          ➕ Menü
-        </button>
+        <div className="input-row">
+          <input
+            value={menuInput}
+            onChange={(e) => setMenuInput(e.target.value)}
+            placeholder="Menü"
+            className="app-input"
+          />
+          <button onClick={addMenu} className="add-button">
+            +
+          </button>
+        </div>
 
         {menus.map((m) => (
           <div key={m.id} className="menu-row">
@@ -681,7 +693,7 @@ return (
                   💾
                 </button>
                 <button onClick={() => setEditingId(null)} className="delete">
-                  ❌
+                  ?
                 </button>
               </>
             ) : (
@@ -745,7 +757,7 @@ return (
                   💾
                 </button>
                 <button onClick={() => setEditingId(null)} className="delete">
-                  ❌
+                  ?
                 </button>
               </>
             ) : (
@@ -770,6 +782,10 @@ return (
             )}
           </div>
         ))}
+
+        <button onClick={selectedToShoppingList} className="add-to-shopping">
+          ➜ Einkaufsliste
+        </button>
 
         <hr />
 
@@ -802,7 +818,7 @@ return (
                   💾
                 </button>
                 <button onClick={() => setEditingId(null)} className="delete">
-                  ❌
+                  ?
                 </button>
               </>
             ) : (
@@ -813,7 +829,7 @@ return (
                   rel="noreferrer"
                   className="link-text"
                 >
-                  {link.url}
+                  Link
                 </a>
                 <button
                   onClick={() => {
@@ -832,10 +848,6 @@ return (
           </div>
         ))}
 
-        <button onClick={selectedToShoppingList} className="add-to-shopping">
-          ➜ Einkaufsliste
-        </button>
-
         <button
           onClick={() => setSelectedMenu(null)}
           className="back-button"
@@ -848,9 +860,17 @@ return (
     {/* ===================== 📖 REZEPTE ===================== */}
     {page === "recipes" && !selectedRecipe && (
       <div className="recipes-container">
-        <button onClick={() => addRecipe("Neues Rezept")} className="add-button">
-          ➕ Rezept
-        </button>
+        <div className="input-row">
+          <input
+            value={recipeInput}
+            onChange={(e) => setRecipeInput(e.target.value)}
+            placeholder="Rezept"
+            className="app-input"
+          />
+          <button onClick={addRecipe} className="add-button">
+            +
+          </button>
+        </div>
 
         {recipes.map((r) => (
           <div key={r.id} className="recipe-row">
@@ -882,7 +902,7 @@ return (
                   💾
                 </button>
                 <button onClick={() => setEditingId(null)} className="delete">
-                  ❌
+                  ?
                 </button>
               </>
             ) : (
@@ -957,7 +977,7 @@ return (
                   💾
                 </button>
                 <button onClick={() => setEditingId(null)} className="delete">
-                  ❌
+                  ?
                 </button>
               </>
             ) : (
@@ -1014,7 +1034,7 @@ return (
                   💾
                 </button>
                 <button onClick={() => setEditingId(null)} className="delete">
-                  ❌
+                  ?
                 </button>
               </>
             ) : (
@@ -1025,7 +1045,7 @@ return (
                   rel="noreferrer"
                   className="link-text"
                 >
-                  {link.url}
+                  Link
                 </a>
                 <button
                   onClick={() => {
@@ -1081,4 +1101,6 @@ return (
 
 
 }
+
+
 
