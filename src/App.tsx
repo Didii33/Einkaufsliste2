@@ -92,7 +92,7 @@ const [recipeLinkInput, setRecipeLinkInput] = useState("");
     );
   }, [user]);
 
-  // 📅 Menüs
+  // Menüs
   useEffect(() => {
     if (!user) return;
     return onSnapshot(
@@ -122,7 +122,7 @@ const [recipeLinkInput, setRecipeLinkInput] = useState("");
     );
   }, [user]);
 
-  // 📅 Menü Produkte
+  // Menü Produkte
   useEffect(() => {
   if (!user || !selectedMenu) return;
 
@@ -609,7 +609,7 @@ return (
       </div>
     )}
 
-    {/* ===================== 📅 MENÜS ===================== */}
+    {/* ===================== MENÜS ===================== */}
     {page === "menus" && !selectedMenu && (
       <div className="menus-container">
         <div className="input-row">
@@ -633,7 +633,7 @@ return (
                 setSelectedProducts([]);
               }}
             >
-              📅 {m.name}
+              {m.name}
             </span>
 
             {editingId === m.id ? (
@@ -671,10 +671,10 @@ return (
       </div>
     )}
 
-    {/* ===================== 📅 MENÜ DETAIL ===================== */}
+    {/* ===================== MENÜ DETAIL ===================== */}
     {page === "menus" && selectedMenu && (
       <div className="menu-detail">
-        <h2 className="menu-title">📅 {selectedMenu.name}</h2>
+        <h2 className="menu-title">{selectedMenu.name}</h2>
 
         <div className="input-row">
           <input
@@ -1036,7 +1036,7 @@ return (
           setPage("menus");
         }}
       >
-        📅<br />Menüs
+        Menüs
       </div>
       <div
         onClick={() => {
