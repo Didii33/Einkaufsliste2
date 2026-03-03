@@ -53,7 +53,7 @@ export default function App() {
   const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
   const [menuProductInput, setMenuProductInput] = useState("");
 
-  // 🔗 Menü Links
+  // ðŸ”— MenÃ¼ Links
   interface LinkItem {
   id: string;
   url: string;
@@ -79,7 +79,7 @@ const [recipeLinkInput, setRecipeLinkInput] = useState("");
     return onAuthStateChanged(auth, setUser);
   }, []);
 
-  // 🛒 Einkaufsliste
+  // ðŸ›’ Einkaufsliste
   useEffect(() => {
     if (!user) return;
     return onSnapshot(
@@ -94,7 +94,7 @@ const [recipeLinkInput, setRecipeLinkInput] = useState("");
     );
   }, [user]);
 
-  // Menüs
+  // MenÃ¼s
   useEffect(() => {
     if (!user) return;
     return onSnapshot(
@@ -109,7 +109,7 @@ const [recipeLinkInput, setRecipeLinkInput] = useState("");
     );
   }, [user]);
 
-  // 📖 Rezepte
+  // ðŸ“– Rezepte
   useEffect(() => {
     if (!user) return;
     return onSnapshot(
@@ -124,7 +124,7 @@ const [recipeLinkInput, setRecipeLinkInput] = useState("");
     );
   }, [user]);
 
-  // Menü Produkte
+  // MenÃ¼ Produkte
   useEffect(() => {
   if (!user || !selectedMenu) return;
 
@@ -147,7 +147,7 @@ const [recipeLinkInput, setRecipeLinkInput] = useState("");
   );
 }, [user, selectedMenu]);
 
-// 🔗 Menü Links
+// ðŸ”— MenÃ¼ Links
 useEffect(() => {
   if (!user || !selectedMenu) return;
 
@@ -201,7 +201,7 @@ useEffect(() => {
 
   if (!user) return <Login onLogin={() => {}} />;
 
-  // ➕ Einkauf
+  // âž• Einkauf
   const addItem = async () => {
     if (!input) return;
     await addDoc(collection(db, "users", user.uid, "shoppingItems"), {
@@ -226,7 +226,7 @@ useEffect(() => {
     }
   };
 
-  // ➕ Menü
+  // âž• MenÃ¼
   const addMenu = async () => {
     const name = menuInput.trim();
     if (!name) return;
@@ -234,7 +234,7 @@ useEffect(() => {
     setMenuInput("");
   };
 
-  // ➕ Rezept
+  // âž• Rezept
   const addRecipe = async () => {
     const name = recipeInput.trim();
     if (!name) return;
@@ -242,7 +242,7 @@ useEffect(() => {
     setRecipeInput("");
   };
 
-  //Einkaufsliste bearbeiten & löschen
+  //Einkaufsliste bearbeiten & lÃ¶schen
   const updateItemName = async (item: Item) => {
   await updateDoc(
     doc(db, "users", user.uid, "shoppingItems", item.id),
@@ -257,7 +257,7 @@ const deleteItem = async (id: string) => {
   );
 };
 
-//Menüs bearbeiten & löschen
+//MenÃ¼s bearbeiten & lÃ¶schen
 const updateMenuName = async (menu: SimpleDoc) => {
   await updateDoc(
     doc(db, "users", user.uid, "menus", menu.id),
@@ -272,7 +272,7 @@ const deleteMenu = async (id: string) => {
   );
 };
 
-//Rezepte bearbeiten & löschen
+//Rezepte bearbeiten & lÃ¶schen
 const updateRecipeName = async (recipe: SimpleDoc) => {
   await updateDoc(
     doc(db, "users", user.uid, "recipes", recipe.id),
@@ -287,7 +287,7 @@ const deleteRecipe = async (id: string) => {
   );
 };
 
-//Menü Produkte hinzufügen
+//MenÃ¼ Produkte hinzufÃ¼gen
 const addMenuProduct = async () => {
   if (!menuProductInput || !selectedMenu) return;
 
@@ -306,7 +306,7 @@ const addMenuProduct = async () => {
   setMenuProductInput("");
 };
 
-// ?? MenÃ¼-Produkt umbenennen
+// ?? MenÃƒÂ¼-Produkt umbenennen
 const updateMenuProductName = async (productId: string) => {
   if (!selectedMenu || !editValue) return;
 
@@ -327,7 +327,7 @@ const updateMenuProductName = async (productId: string) => {
   setEditValue("");
 };
 
-// ??? MenÃ¼-Produkt lÃ¶schen
+// ??? MenÃƒÂ¼-Produkt lÃƒÂ¶schen
 const deleteMenuProduct = async (productId: string) => {
   if (!selectedMenu) return;
 
@@ -344,7 +344,7 @@ const deleteMenuProduct = async (productId: string) => {
   );
 };
 
-// ✅ Menü-Produkt auswählen / abwählen
+// âœ… MenÃ¼-Produkt auswÃ¤hlen / abwÃ¤hlen
 const toggleSelectProduct = (id: string) => {
   setSelectedProducts(prev =>
     prev.includes(id)
@@ -368,7 +368,7 @@ const selectedToShoppingList = async () => {
 };
 
 
-// ➕ Link hinzufügen
+// âž• Link hinzufÃ¼gen
 const addMenuLink = async () => {
   if (!menuLinkInput || !selectedMenu) return;
 
@@ -408,7 +408,7 @@ const updateMenuLink = async (linkId: string) => {
   setEditValue("");
 };
 
-// ??? Link lÃ¶schen
+// ??? Link lÃƒÂ¶schen
 const deleteMenuLink = async (linkId: string) => {
   if (!selectedMenu) return;
 
@@ -496,7 +496,7 @@ const copySelectedRecipesToMenu = async () => {
     const recipe = recipes.find(r => r.id === recipeId);
     if (!recipe) continue;
 
-    // Neues Menü anlegen mit Rezeptname
+    // Neues MenÃ¼ anlegen mit Rezeptname
     const menuRef = await addDoc(
       collection(db, "users", user.uid, "menus"),
       { name: recipe.name }
@@ -525,7 +525,7 @@ const copySelectedRecipesToMenu = async () => {
     }
   }
 
-  // Checkboxen zurücksetzen
+  // Checkboxen zurÃ¼cksetzen
   setSelectedRecipeProducts([]);
 };
 
@@ -559,10 +559,10 @@ const syncLatestVersion = async () => {
 return (
   <div className="app-container">
     <h1 className="app-title">
-      {user.email?.slice(0, 10)}'s Einkaufsliste 🛒
+      {user.email?.slice(0, 10)}'s Einkaufsliste ðŸ›’
     </h1>
 
-    {/* ===================== 🛒 EINKAUFSLISTE ===================== */}
+    {/* ===================== ðŸ›’ EINKAUFSLISTE ===================== */}
     {page === "shopping" && (
       <div className="shopping-container">
         {/* Input + Add Button */}
@@ -596,7 +596,7 @@ return (
                   className="app-input edit-input"
                 />
                 <button onClick={() => updateItemName(i)} className="edit">
-                  💾
+                  ðŸ’¾
                 </button>
                 <button onClick={() => setEditingId(null)} className="delete">
                   ?
@@ -612,10 +612,10 @@ return (
                   }}
                   className="edit"
                 >
-                  ✏️
+                  âœï¸
                 </button>
                 <button onClick={() => deleteItem(i.id)} className="delete">
-                  🗑️
+                  ðŸ—‘ï¸
                 </button>
               </>
             )}
@@ -623,19 +623,19 @@ return (
         ))}
 
         <button onClick={deleteChecked} className="delete-selected">
-          Ausgewählte löschen
+          AusgewÃ¤hlte lÃ¶schen
         </button>
       </div>
     )}
 
-    {/* ===================== MENÜS ===================== */}
+    {/* ===================== MENÃœS ===================== */}
     {page === "menus" && !selectedMenu && (
       <div className="menus-container">
         <div className="input-row">
           <input
             value={menuInput}
             onChange={(e) => setMenuInput(e.target.value)}
-            placeholder="Menü"
+            placeholder="MenÃ¼"
             className="app-input"
           />
           <button onClick={addMenu} className="add-button">
@@ -663,7 +663,7 @@ return (
                   className="app-input edit-input"
                 />
                 <button onClick={() => updateMenuName(m)} className="edit">
-                  💾
+                  ðŸ’¾
                 </button>
                 <button onClick={() => setEditingId(null)} className="delete">
                   ?
@@ -678,10 +678,10 @@ return (
                   }}
                   className="edit"
                 >
-                  ✏️
+                  âœï¸
                 </button>
                 <button onClick={() => deleteMenu(m.id)} className="delete">
-                  🗑️
+                  ðŸ—‘ï¸
                 </button>
               </>
             )}
@@ -690,7 +690,7 @@ return (
       </div>
     )}
 
-    {/* ===================== MENÜ DETAIL ===================== */}
+    {/* ===================== MENÃœ DETAIL ===================== */}
     {page === "menus" && selectedMenu && (
       <div className="menu-detail">
         <h2 className="menu-title">{selectedMenu.name}</h2>
@@ -699,7 +699,7 @@ return (
           <input
             value={menuProductInput}
             onChange={(e) => setMenuProductInput(e.target.value)}
-            placeholder="Produkt hinzufügen"
+            placeholder="Produkt hinzufÃ¼gen"
             className="app-input"
           />
           <button onClick={addMenuProduct} className="add-button">
@@ -727,7 +727,7 @@ return (
                   onClick={() => updateMenuProductName(p.id)}
                   className="edit"
                 >
-                  💾
+                  ðŸ’¾
                 </button>
                 <button onClick={() => setEditingId(null)} className="delete">
                   ?
@@ -743,13 +743,13 @@ return (
                   }}
                   className="edit"
                 >
-                  ✏️
+                  âœï¸
                 </button>
                 <button
                   onClick={() => deleteMenuProduct(p.id)}
                   className="delete"
                 >
-                  🗑️
+                  ðŸ—‘ï¸
                 </button>
               </>
             )}
@@ -757,12 +757,12 @@ return (
         ))}
 
         <button onClick={selectedToShoppingList} className="add-to-shopping">
-          ➜ Einkaufsliste
+          âžœ Einkaufsliste
         </button>
 
         <hr />
 
-        <h3>🔗 Links</h3>
+        <h3>ðŸ”— Links</h3>
         <div className="input-row">
           <input
             value={menuLinkInput}
@@ -788,7 +788,7 @@ return (
                   onClick={() => updateMenuLink(link.id)}
                   className="edit"
                 >
-                  💾
+                  ðŸ’¾
                 </button>
                 <button onClick={() => setEditingId(null)} className="delete">
                   ?
@@ -811,10 +811,10 @@ return (
                   }}
                   className="edit"
                 >
-                  ✏️
+                  âœï¸
                 </button>
                 <button onClick={() => deleteMenuLink(link.id)} className="delete">
-                  🗑️
+                  ðŸ—‘ï¸
                 </button>
               </>
             )}
@@ -825,12 +825,12 @@ return (
           onClick={() => setSelectedMenu(null)}
           className="back-button"
         >
-          ⬅ Zurück
+          â¬… ZurÃ¼ck
         </button>
       </div>
     )}
 
-    {/* ===================== 📖 REZEPTE ===================== */}
+    {/* ===================== ðŸ“– REZEPTE ===================== */}
     {page === "recipes" && !selectedRecipe && (
       <div className="recipes-container">
         <div className="input-row">
@@ -872,7 +872,7 @@ return (
                   className="app-input edit-input"
                 />
                 <button onClick={() => updateRecipeName(r)} className="edit">
-                  💾
+                  ðŸ’¾
                 </button>
                 <button onClick={() => setEditingId(null)} className="delete">
                   ?
@@ -888,7 +888,7 @@ return (
                   }}
                   className="edit"
                 >
-                  ✏️
+                  âœï¸
                 </button>
                 <button
                   onClick={(e) => {
@@ -897,7 +897,7 @@ return (
                   }}
                   className="delete"
                 >
-                  🗑️
+                  ðŸ—‘ï¸
                 </button>
               </>
             )}
@@ -905,21 +905,21 @@ return (
         ))}
 
         <button onClick={copySelectedRecipesToMenu} className="add-to-menu">
-          ➜ Ausgewählte in Menü
+          âžœ AusgewÃ¤hlte in MenÃ¼
         </button>
       </div>
     )}
 
-    {/* ===================== 📖 REZEPT DETAIL ===================== */}
+    {/* ===================== ðŸ“– REZEPT DETAIL ===================== */}
     {page === "recipes" && selectedRecipe && (
       <div className="recipe-detail">
-        <h2 className="recipe-title">📖 {selectedRecipe.name}</h2>
+        <h2 className="recipe-title">ðŸ“– {selectedRecipe.name}</h2>
 
         <div className="input-row">
           <input
             value={recipeProductInput}
             onChange={(e) => setRecipeProductInput(e.target.value)}
-            placeholder="Produkt hinzufügen"
+            placeholder="Produkt hinzufÃ¼gen"
             className="app-input"
           />
           <button onClick={addRecipeProduct} className="add-button">
@@ -947,7 +947,7 @@ return (
                   onClick={() => updateRecipeProductName(p.id)}
                   className="edit"
                 >
-                  💾
+                  ðŸ’¾
                 </button>
                 <button onClick={() => setEditingId(null)} className="delete">
                   ?
@@ -963,13 +963,13 @@ return (
                   }}
                   className="edit"
                 >
-                  ✏️
+                  âœï¸
                 </button>
                 <button
                   onClick={() => deleteRecipeProduct(p.id)}
                   className="delete"
                 >
-                  🗑️
+                  ðŸ—‘ï¸
                 </button>
               </>
             )}
@@ -978,7 +978,7 @@ return (
 
         <hr />
 
-        <h3>🔗 Links</h3>
+        <h3>ðŸ”— Links</h3>
         <div className="input-row">
           <input
             value={recipeLinkInput}
@@ -1004,7 +1004,7 @@ return (
                   onClick={() => updateRecipeLink(link.id)}
                   className="edit"
                 >
-                  💾
+                  ðŸ’¾
                 </button>
                 <button onClick={() => setEditingId(null)} className="delete">
                   ?
@@ -1027,10 +1027,10 @@ return (
                   }}
                   className="edit"
                 >
-                  ✏️
+                  âœï¸
                 </button>
                 <button onClick={() => deleteRecipeLink(link.id)} className="delete">
-                  🗑️
+                  ðŸ—‘ï¸
                 </button>
               </>
             )}
@@ -1041,12 +1041,12 @@ return (
           onClick={() => setSelectedRecipe(null)}
           className="back-button"
         >
-          ⬅ Zurück
+          â¬… ZurÃ¼ck
         </button>
       </div>
     )}
 
-    {/* ===================== 📱 BOTTOM NAV ===================== */}
+    {/* ===================== ðŸ“± BOTTOM NAV ===================== */}
     {page === "settings" && (
       <div className="menus-container">
         <h2>Einstellungen</h2>
@@ -1066,14 +1066,14 @@ return (
     )}
 
     <div className="bottom-nav">
-      <div onClick={() => setPage("shopping")}>🛒<br />Liste</div>
+      <div onClick={() => setPage("shopping")}>ðŸ›’<br />Liste</div>
       <div
         onClick={() => {
           setSelectedMenu(null);
           setPage("menus");
         }}
       >
-        Menüs
+        📅<br />Menüs
       </div>
       <div
         onClick={() => {
@@ -1081,9 +1081,9 @@ return (
           setPage("recipes");
         }}
       >
-        📖<br />Rezepte
+        ðŸ“–<br />Rezepte
       </div>
-      <div onClick={() => setPage("settings")}>Einstellungen</div>
+      <div onClick={() => setPage("settings")}>⚙️<br />Einstellungen</div>
     </div>
   </div>
 );
@@ -1093,6 +1093,7 @@ return (
 
 
 }
+
 
 
 
