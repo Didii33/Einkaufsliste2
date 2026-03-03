@@ -28,11 +28,13 @@ interface SimpleDoc {
   name: string;
 }
 
-type Page = "shopping" | "menus" | "recipes";
+type Page = "shopping" | "menus" | "recipes" | "settings";
 
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [page, setPage] = useState<Page>("shopping");
+  const [syncing, setSyncing] = useState(false);
+  const [syncMessage, setSyncMessage] = useState("");
 
   const [shoppingItems, setShoppingItems] = useState<Item[]>([]);
   const [menus, setMenus] = useState<SimpleDoc[]>([]);
@@ -527,15 +529,32 @@ const copySelectedRecipesToMenu = async () => {
   setSelectedRecipeProducts([]);
 };
 
+const syncLatestVersion = async () => {
+  setSyncing(true);
+  setSyncMessage("Synchronisierung laeuft...");
 
+  try {
+    if ("serviceWorker" in navigator) {
+      const registrations = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(
+        registrations.map((registration) => registration.unregister())
+      );
+    }
 
+    if ("caches" in window) {
+      const cacheKeys = await caches.keys();
+      await Promise.all(cacheKeys.map((key) => caches.delete(key)));
+    }
 
-
-
-
-
-
-
+    setSyncMessage("Neueste Version wird geladen...");
+    const basePath = process.env.PUBLIC_URL || "";
+    window.location.replace(`${basePath}/?sync=${Date.now()}`);
+  } catch (error) {
+    console.error("Synchronisierung fehlgeschlagen:", error);
+    setSyncMessage("Synchronisierung fehlgeschlagen. Bitte Seite neu laden.");
+    setSyncing(false);
+  }
+};
 
 return (
   <div className="app-container">
@@ -1028,6 +1047,24 @@ return (
     )}
 
     {/* ===================== 📱 BOTTOM NAV ===================== */}
+    {page === "settings" && (
+      <div className="menus-container">
+        <h2>Einstellungen</h2>
+        <p className="settings-text">
+          Falls die PWA noch eine alte Version zeigt, hier auf Synchronisieren klicken.
+          Die App laedt danach direkt die neueste Version.
+        </p>
+        <button
+          onClick={syncLatestVersion}
+          className="add-to-shopping"
+          disabled={syncing}
+        >
+          {syncing ? "Synchronisiere..." : "Jetzt synchronisieren"}
+        </button>
+        {syncMessage && <p className="settings-text">{syncMessage}</p>}
+      </div>
+    )}
+
     <div className="bottom-nav">
       <div onClick={() => setPage("shopping")}>🛒<br />Liste</div>
       <div
@@ -1046,6 +1083,7 @@ return (
       >
         📖<br />Rezepte
       </div>
+      <div onClick={() => setPage("settings")}>Einstellungen</div>
     </div>
   </div>
 );
