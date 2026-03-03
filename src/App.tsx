@@ -1,10 +1,11 @@
-﻿// cd C:\Users\nicol\OneDrive\Desktop\Programmieren\Einkaufsliste2\einkaufsliste-ts
+// cd C:\Users\nicol\OneDrive\Desktop\Programmieren\Einkaufsliste2\einkaufsliste-ts
 // npm start
 
 
 import "./App.css";
 import { useEffect, useState } from "react";
 import { auth, db } from "./firebase";
+import Login from "./Login";
 import { onAuthStateChanged, User } from "firebase/auth";
 import {
   collection,
@@ -196,7 +197,7 @@ useEffect(() => {
 
 
 
-  if (!user) return <p>Bitte einloggen…</p>;
+  if (!user) return <Login onLogin={() => {}} />;
 
   // ➕ Einkauf
   const addItem = async () => {
@@ -238,53 +239,6 @@ useEffect(() => {
     await addDoc(collection(db, "users", user.uid, "recipes"), { name });
     setRecipeInput("");
   };
-
-  // ?? Rezept ? MenÃ¼
-const recipeToMenu = async (recipe: SimpleDoc) => {
-  const menuRef = await addDoc(
-    collection(db, "users", user.uid, "menus"),
-    { name: recipe.name }
-  );
-
-  // Produkte kopieren
-  const products = await getDocs(
-    collection(db, "users", user.uid, "recipes", recipe.id, "products")
-  );
-  for (const p of products.docs) {
-    await addDoc(
-      collection(db, "users", user.uid, "menus", menuRef.id, "products"),
-      { name: p.data().name }
-    );
-  }
-
-  // 🔗 Links kopieren
-  const links = await getDocs(
-    collection(db, "users", user.uid, "recipes", recipe.id, "links")
-  );
-  for (const l of links.docs) {
-    await addDoc(
-      collection(db, "users", user.uid, "menus", menuRef.id, "links"),
-      { url: l.data().url }
-    );
-  }
-};
-
-  
-
-  // ?? MenÃ¼ ? Einkaufsliste
-  const menuToShopping = async (menu: SimpleDoc) => {
-    const products = await getDocs(
-      collection(db, "users", user.uid, "menus", menu.id, "products")
-    );
-
-    for (const p of products.docs) {
-      await addDoc(
-        collection(db, "users", user.uid, "shoppingItems"),
-        { name: p.data().name, checked: false }
-      );
-    }
-  };
-
 
   //Einkaufsliste bearbeiten & löschen
   const updateItemName = async (item: Item) => {
