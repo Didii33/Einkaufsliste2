@@ -640,9 +640,7 @@ return (
             placeholder="Produkt"
             className="app-input"
           />
-          <button onClick={addItem} className="add-button">
-            +
-          </button>
+          <button onClick={addItem} className="add-button"><span>+</span></button>
         </div>
 
         {/* Liste der Produkte */}
@@ -705,9 +703,7 @@ return (
             placeholder="Menü"
             className="app-input"
           />
-          <button onClick={addMenu} className="add-button">
-            +
-          </button>
+          <button onClick={addMenu} className="add-button"><span>+</span></button>
         </div>
 
         {menus.map((m) => (
@@ -769,9 +765,7 @@ return (
             placeholder="Produkt hinzufügen"
             className="app-input"
           />
-          <button onClick={addMenuProduct} className="add-button">
-            +
-          </button>
+          <button onClick={addMenuProduct} className="add-button"><span>+</span></button>
         </div>
 
         {menuProducts.map((p) => (
@@ -837,9 +831,7 @@ return (
             placeholder="https://..."
             className="app-input"
           />
-          <button onClick={addMenuLink} className="add-button">
-            +
-          </button>
+          <button onClick={addMenuLink} className="add-button"><span>+</span></button>
         </div>
 
         {menuLinks.map((link) => (
@@ -907,9 +899,7 @@ return (
             placeholder="Rezept"
             className="app-input"
           />
-          <button onClick={addRecipe} className="add-button">
-            +
-          </button>
+          <button onClick={addRecipe} className="add-button"><span>+</span></button>
         </div>
 
         {recipes.map((r) => (
@@ -989,9 +979,7 @@ return (
             placeholder="Produkt hinzufügen"
             className="app-input"
           />
-          <button onClick={addRecipeProduct} className="add-button">
-            +
-          </button>
+          <button onClick={addRecipeProduct} className="add-button"><span>+</span></button>
         </div>
 
         {recipeProducts.map((p) => (
@@ -1053,9 +1041,7 @@ return (
             placeholder="https://..."
             className="app-input"
           />
-          <button onClick={addRecipeLink} className="add-button">
-            +
-          </button>
+          <button onClick={addRecipeLink} className="add-button"><span>+</span></button>
         </div>
 
         {recipeLinks.map((link) => (
@@ -1192,6 +1178,7 @@ return (
 
 
 }
+
 
 
 

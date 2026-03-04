@@ -91,12 +91,22 @@ button:disabled {
 .add-button {
   width: 40px;
   height: 40px;
-  font-size: 24px;
+  padding: 0;
+  font-size: 26px;
+  line-height: 1;
   border-radius: 50%;
   background: linear-gradient(160deg, #28c085, var(--primary));
   color: #fff;
   flex-shrink: 0;
   box-shadow: 0 10px 18px rgba(30, 166, 114, 0.28);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.add-button > span {
+  display: block;
+  transform: translateY(-1px);
 }
 
 .add-button:hover {
@@ -365,3 +375,4 @@ hr {
     padding-top: 12px;
   }
 }
+
