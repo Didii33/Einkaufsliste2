@@ -1147,6 +1147,17 @@ return (
           {loggingOut ? "Logge aus..." : "Logout"}
         </button>
         {syncMessage && <p className="settings-text">{syncMessage}</p>}
+        <div className="settings-footer">
+          <a
+            href="https://github.com/"
+            target="_blank"
+            rel="noreferrer"
+            className="settings-link"
+          >
+            1. Mein GitHub
+          </a>
+          <p className="settings-credit">2. by Nicola</p>
+        </div>
       </div>
     )}
 

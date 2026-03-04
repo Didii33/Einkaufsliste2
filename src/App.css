@@ -273,6 +273,28 @@ hr {
   margin-top: 10px;
 }
 
+.settings-footer {
+  margin-top: 18px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+
+.settings-link {
+  color: #1b7cd8;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.settings-link:hover {
+  text-decoration: underline;
+}
+
+.settings-credit {
+  margin: 8px 0 0;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
 .confirm-overlay {
   position: fixed;
   inset: 0;
