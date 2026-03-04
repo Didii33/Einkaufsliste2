@@ -258,6 +258,10 @@ hr {
   line-height: 1.45;
 }
 
+.settings-logout {
+  margin-top: 10px;
+}
+
 .confirm-overlay {
   position: fixed;
   inset: 0;

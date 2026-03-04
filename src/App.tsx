@@ -1,4 +1,4 @@
-﻿// cd C:\Users\nicol\OneDrive\Desktop\Programmieren\Einkaufsliste2\einkaufsliste-ts
+// cd C:\Users\nicol\OneDrive\Desktop\Programmieren\Einkaufsliste2\einkaufsliste-ts
 // npm start
 
 
@@ -6,7 +6,7 @@ import "./App.css";
 import { useEffect, useState } from "react";
 import { auth, db } from "./firebase";
 import Login from "./Login";
-import { onAuthStateChanged, User } from "firebase/auth";
+import { onAuthStateChanged, signOut, User } from "firebase/auth";
 import {
   collection,
   addDoc,
@@ -36,6 +36,7 @@ export default function App() {
   const [page, setPage] = useState<Page>("shopping");
   const [syncing, setSyncing] = useState(false);
   const [syncMessage, setSyncMessage] = useState("");
+  const [loggingOut, setLoggingOut] = useState(false);
 
   const [shoppingItems, setShoppingItems] = useState<Item[]>([]);
   const [menus, setMenus] = useState<SimpleDoc[]>([]);
@@ -613,6 +614,15 @@ const syncLatestVersion = async () => {
   }
 };
 
+const logout = async () => {
+  setLoggingOut(true);
+  try {
+    await signOut(auth);
+  } finally {
+    setLoggingOut(false);
+  }
+};
+
 return (
   <div className="app-container">
     <h1 className="app-title">
@@ -1142,6 +1152,13 @@ return (
           disabled={syncing}
         >
           {syncing ? "Synchronisiere..." : "Jetzt synchronisieren"}
+        </button>
+        <button
+          onClick={logout}
+          className="delete settings-logout"
+          disabled={loggingOut}
+        >
+          {loggingOut ? "Logge aus..." : "Logout"}
         </button>
         {syncMessage && <p className="settings-text">{syncMessage}</p>}
       </div>
