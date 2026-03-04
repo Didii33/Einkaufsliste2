@@ -1,4 +1,4 @@
-// cd C:\Users\nicol\OneDrive\Desktop\Programmieren\Einkaufsliste2\einkaufsliste-ts
+﻿// cd C:\Users\nicol\OneDrive\Desktop\Programmieren\Einkaufsliste2\einkaufsliste-ts
 // npm start
 
 
@@ -256,7 +256,7 @@ useEffect(() => {
     if (!checkedItems.length) return;
 
     openDeleteConfirm(
-      `Willst du ${checkedItems.length} ausgewaehlte Eintraege wirklich loeschen?`,
+      `Willst du ${checkedItems.length} ausgewählte Einträge wirklich löschen?`,
       async () => {
         for (const item of checkedItems) {
           await deleteDoc(
@@ -293,7 +293,7 @@ useEffect(() => {
 };
 
 const deleteItem = (id: string) => {
-  openDeleteConfirm("Willst du diesen Eintrag wirklich loeschen?", async () => {
+  openDeleteConfirm("Willst du diesen Eintrag wirklich löschen?", async () => {
     await deleteDoc(
       doc(db, "users", user.uid, "shoppingItems", id)
     );
@@ -310,7 +310,7 @@ const updateMenuName = async (menu: SimpleDoc) => {
 };
 
 const deleteMenu = (id: string) => {
-  openDeleteConfirm("Willst du dieses Menue wirklich loeschen?", async () => {
+  openDeleteConfirm("Willst du dieses Menue wirklich löschen?", async () => {
     await deleteDoc(
       doc(db, "users", user.uid, "menus", id)
     );
@@ -327,7 +327,7 @@ const updateRecipeName = async (recipe: SimpleDoc) => {
 };
 
 const deleteRecipe = (id: string) => {
-  openDeleteConfirm("Willst du dieses Rezept wirklich loeschen?", async () => {
+  openDeleteConfirm("Willst du dieses Rezept wirklich löschen?", async () => {
     await deleteDoc(
       doc(db, "users", user.uid, "recipes", id)
     );
@@ -378,7 +378,7 @@ const updateMenuProductName = async (productId: string) => {
 const deleteMenuProduct = (productId: string) => {
   if (!selectedMenu) return;
 
-  openDeleteConfirm("Willst du dieses Produkt wirklich loeschen?", async () => {
+  openDeleteConfirm("Willst du dieses Produkt wirklich löschen?", async () => {
     await deleteDoc(
       doc(
         db,
@@ -461,7 +461,7 @@ const updateMenuLink = async (linkId: string) => {
 const deleteMenuLink = (linkId: string) => {
   if (!selectedMenu) return;
 
-  openDeleteConfirm("Willst du diesen Link wirklich loeschen?", async () => {
+  openDeleteConfirm("Willst du diesen Link wirklich löschen?", async () => {
     await deleteDoc(
       doc(
         db,
@@ -508,7 +508,7 @@ const updateRecipeProductName = async (id: string) => {
 const deleteRecipeProduct = (id: string) => {
   if (!selectedRecipe) return;
 
-  openDeleteConfirm("Willst du dieses Produkt wirklich loeschen?", async () => {
+  openDeleteConfirm("Willst du dieses Produkt wirklich löschen?", async () => {
     await deleteDoc(
       doc(db, "users", user.uid, "recipes", selectedRecipe.id, "products", id)
     );
@@ -539,7 +539,7 @@ const updateRecipeLink = async (id: string) => {
 const deleteRecipeLink = (id: string) => {
   if (!selectedRecipe) return;
 
-  openDeleteConfirm("Willst du diesen Link wirklich loeschen?", async () => {
+  openDeleteConfirm("Willst du diesen Link wirklich löschen?", async () => {
     await deleteDoc(
       doc(db, "users", user.uid, "recipes", selectedRecipe.id, "links", id)
     );
@@ -588,7 +588,7 @@ const copySelectedRecipesToMenu = async () => {
 
 const syncLatestVersion = async () => {
   setSyncing(true);
-  setSyncMessage("Synchronisierung laeuft...");
+  setSyncMessage("Synchronisierung läuft...");
 
   try {
     if ("serviceWorker" in navigator) {
@@ -1106,7 +1106,7 @@ return (
     {deleteConfirmOpen && (
       <div className="confirm-overlay" onClick={closeDeleteConfirm}>
         <div className="confirm-modal" onClick={(e) => e.stopPropagation()}>
-          <h3>Loeschen bestaetigen</h3>
+          <h3>öschen bestätigen</h3>
           <p>{deleteConfirmMessage}</p>
           <div className="confirm-actions">
             <button
@@ -1121,7 +1121,7 @@ return (
               className="delete"
               disabled={deleteConfirmLoading}
             >
-              {deleteConfirmLoading ? "Loesche..." : "Loeschen"}
+              {deleteConfirmLoading ? "Lösche..." : "Löschen"}
             </button>
           </div>
         </div>
@@ -1134,7 +1134,7 @@ return (
         <h2>Einstellungen</h2>
         <p className="settings-text">
           Falls die PWA noch eine alte Version zeigt, hier auf Synchronisieren klicken.
-          Die App laedt danach direkt die neueste Version.
+          Die App lädt danach direkt die neueste Version.
         </p>
         <button
           onClick={syncLatestVersion}
