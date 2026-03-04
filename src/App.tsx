@@ -29,6 +29,7 @@ interface SimpleDoc {
 }
 
 type Page = "shopping" | "menus" | "recipes" | "settings";
+type ConfirmDeleteAction = () => Promise<void>;
 
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
@@ -69,6 +70,10 @@ const [recipeProductInput, setRecipeProductInput] = useState("");
 
 const [recipeLinks, setRecipeLinks] = useState<LinkItem[]>([]);
 const [recipeLinkInput, setRecipeLinkInput] = useState("");
+const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+const [deleteConfirmMessage, setDeleteConfirmMessage] = useState("");
+const [deleteConfirmLoading, setDeleteConfirmLoading] = useState(false);
+const [deleteAction, setDeleteAction] = useState<ConfirmDeleteAction | null>(null);
 
 
 
@@ -201,6 +206,34 @@ useEffect(() => {
 
   if (!user) return <Login onLogin={() => {}} />;
 
+  const openDeleteConfirm = (message: string, action: ConfirmDeleteAction) => {
+    setDeleteConfirmMessage(message);
+    setDeleteAction(() => action);
+    setDeleteConfirmOpen(true);
+  };
+
+  const closeDeleteConfirm = () => {
+    if (deleteConfirmLoading) return;
+    setDeleteConfirmOpen(false);
+    setDeleteConfirmMessage("");
+    setDeleteAction(null);
+  };
+
+  const runDeleteConfirm = async () => {
+    if (!deleteAction) return;
+    setDeleteConfirmLoading(true);
+    try {
+      await deleteAction();
+      setDeleteConfirmOpen(false);
+      setDeleteConfirmMessage("");
+      setDeleteAction(null);
+    } catch (error) {
+      console.error("Delete failed:", error);
+    } finally {
+      setDeleteConfirmLoading(false);
+    }
+  };
+
   // ➕ Einkauf
   const addItem = async () => {
     if (!input) return;
@@ -218,12 +251,20 @@ useEffect(() => {
     );
   };
 
-  const deleteChecked = async () => {
-    for (const item of shoppingItems.filter((i) => i.checked)) {
-      await deleteDoc(
-        doc(db, "users", user.uid, "shoppingItems", item.id)
-      );
-    }
+  const deleteChecked = () => {
+    const checkedItems = shoppingItems.filter((i) => i.checked);
+    if (!checkedItems.length) return;
+
+    openDeleteConfirm(
+      `Willst du ${checkedItems.length} ausgewaehlte Eintraege wirklich loeschen?`,
+      async () => {
+        for (const item of checkedItems) {
+          await deleteDoc(
+            doc(db, "users", user.uid, "shoppingItems", item.id)
+          );
+        }
+      }
+    );
   };
 
   // ➕ Menü
@@ -251,10 +292,12 @@ useEffect(() => {
   setEditingId(null);
 };
 
-const deleteItem = async (id: string) => {
-  await deleteDoc(
-    doc(db, "users", user.uid, "shoppingItems", id)
-  );
+const deleteItem = (id: string) => {
+  openDeleteConfirm("Willst du diesen Eintrag wirklich loeschen?", async () => {
+    await deleteDoc(
+      doc(db, "users", user.uid, "shoppingItems", id)
+    );
+  });
 };
 
 //Menüs bearbeiten & löschen
@@ -266,10 +309,12 @@ const updateMenuName = async (menu: SimpleDoc) => {
   setEditingId(null);
 };
 
-const deleteMenu = async (id: string) => {
-  await deleteDoc(
-    doc(db, "users", user.uid, "menus", id)
-  );
+const deleteMenu = (id: string) => {
+  openDeleteConfirm("Willst du dieses Menue wirklich loeschen?", async () => {
+    await deleteDoc(
+      doc(db, "users", user.uid, "menus", id)
+    );
+  });
 };
 
 //Rezepte bearbeiten & löschen
@@ -281,10 +326,12 @@ const updateRecipeName = async (recipe: SimpleDoc) => {
   setEditingId(null);
 };
 
-const deleteRecipe = async (id: string) => {
-  await deleteDoc(
-    doc(db, "users", user.uid, "recipes", id)
-  );
+const deleteRecipe = (id: string) => {
+  openDeleteConfirm("Willst du dieses Rezept wirklich loeschen?", async () => {
+    await deleteDoc(
+      doc(db, "users", user.uid, "recipes", id)
+    );
+  });
 };
 
 //Menü Produkte hinzufügen
@@ -328,20 +375,22 @@ const updateMenuProductName = async (productId: string) => {
 };
 
 // ??? Menü-Produkt löschen
-const deleteMenuProduct = async (productId: string) => {
+const deleteMenuProduct = (productId: string) => {
   if (!selectedMenu) return;
 
-  await deleteDoc(
-    doc(
-      db,
-      "users",
-      user.uid,
-      "menus",
-      selectedMenu.id,
-      "products",
-      productId
-    )
-  );
+  openDeleteConfirm("Willst du dieses Produkt wirklich loeschen?", async () => {
+    await deleteDoc(
+      doc(
+        db,
+        "users",
+        user.uid,
+        "menus",
+        selectedMenu.id,
+        "products",
+        productId
+      )
+    );
+  });
 };
 
 // ✅ Menü-Produkt auswählen / abwählen
@@ -409,20 +458,22 @@ const updateMenuLink = async (linkId: string) => {
 };
 
 // ??? Link löschen
-const deleteMenuLink = async (linkId: string) => {
+const deleteMenuLink = (linkId: string) => {
   if (!selectedMenu) return;
 
-  await deleteDoc(
-    doc(
-      db,
-      "users",
-      user.uid,
-      "menus",
-      selectedMenu.id,
-      "links",
-      linkId
-    )
-  );
+  openDeleteConfirm("Willst du diesen Link wirklich loeschen?", async () => {
+    await deleteDoc(
+      doc(
+        db,
+        "users",
+        user.uid,
+        "menus",
+        selectedMenu.id,
+        "links",
+        linkId
+      )
+    );
+  });
 };
 
 
@@ -454,11 +505,14 @@ const updateRecipeProductName = async (id: string) => {
   setEditValue("");
 };
 
-const deleteRecipeProduct = async (id: string) => {
+const deleteRecipeProduct = (id: string) => {
   if (!selectedRecipe) return;
-  await deleteDoc(
-    doc(db, "users", user.uid, "recipes", selectedRecipe.id, "products", id)
-  );
+
+  openDeleteConfirm("Willst du dieses Produkt wirklich loeschen?", async () => {
+    await deleteDoc(
+      doc(db, "users", user.uid, "recipes", selectedRecipe.id, "products", id)
+    );
+  });
 };
 
 // Links
@@ -482,11 +536,14 @@ const updateRecipeLink = async (id: string) => {
   setEditValue("");
 };
 
-const deleteRecipeLink = async (id: string) => {
+const deleteRecipeLink = (id: string) => {
   if (!selectedRecipe) return;
-  await deleteDoc(
-    doc(db, "users", user.uid, "recipes", selectedRecipe.id, "links", id)
-  );
+
+  openDeleteConfirm("Willst du diesen Link wirklich loeschen?", async () => {
+    await deleteDoc(
+      doc(db, "users", user.uid, "recipes", selectedRecipe.id, "links", id)
+    );
+  });
 };
 
 const copySelectedRecipesToMenu = async () => {
@@ -1045,6 +1102,32 @@ return (
         </button>
       </div>
     )}
+
+    {deleteConfirmOpen && (
+      <div className="confirm-overlay" onClick={closeDeleteConfirm}>
+        <div className="confirm-modal" onClick={(e) => e.stopPropagation()}>
+          <h3>Loeschen bestaetigen</h3>
+          <p>{deleteConfirmMessage}</p>
+          <div className="confirm-actions">
+            <button
+              onClick={closeDeleteConfirm}
+              className="back-button"
+              disabled={deleteConfirmLoading}
+            >
+              Abbrechen
+            </button>
+            <button
+              onClick={runDeleteConfirm}
+              className="delete"
+              disabled={deleteConfirmLoading}
+            >
+              {deleteConfirmLoading ? "Loesche..." : "Loeschen"}
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+
     {/* ===================== BOTTOM NAV ===================== */}
     {page === "settings" && (
       <div className="menus-container">
