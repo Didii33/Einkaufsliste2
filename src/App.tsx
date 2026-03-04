@@ -1106,7 +1106,7 @@ return (
     {deleteConfirmOpen && (
       <div className="confirm-overlay" onClick={closeDeleteConfirm}>
         <div className="confirm-modal" onClick={(e) => e.stopPropagation()}>
-          <h3>öschen bestätigen</h3>
+          <h3>Löschen bestätigen</h3>
           <p>{deleteConfirmMessage}</p>
           <div className="confirm-actions">
             <button
