@@ -5,12 +5,14 @@ import {
   signInWithEmailAndPassword,
 } from "firebase/auth";
 import "./Login.css";
+import { LANGUAGES, useI18n } from "./i18n";
 
 interface Props {
   onLogin: () => void;
 }
 
 export default function Login({ onLogin }: Props) {
+  const { t, lang, setLang } = useI18n();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isRegisterMode, setIsRegisterMode] = useState(false);
@@ -24,7 +26,7 @@ export default function Login({ onLogin }: Props) {
       await createUserWithEmailAndPassword(auth, email, password);
       onLogin();
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Registrierung fehlgeschlagen.";
+      const message = err instanceof Error ? err.message : t("registerFailed");
       setError(message);
     } finally {
       setIsLoading(false);
@@ -38,7 +40,7 @@ export default function Login({ onLogin }: Props) {
       await signInWithEmailAndPassword(auth, email, password);
       onLogin();
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Login fehlgeschlagen.";
+      const message = err instanceof Error ? err.message : t("loginFailed");
       setError(message);
     } finally {
       setIsLoading(false);
@@ -60,14 +62,26 @@ export default function Login({ onLogin }: Props) {
       <div className="auth-bg-shape auth-bg-shape--right" />
 
       <div className="auth-card">
-        <p className="auth-kicker">Einkaufsliste</p>
+        <div className="auth-lang">
+          {LANGUAGES.map((l) => (
+            <button
+              key={l.code}
+              type="button"
+              className={`auth-lang-btn ${lang === l.code ? "is-active" : ""}`}
+              onClick={() => setLang(l.code)}
+            >
+              {l.code.toUpperCase()}
+            </button>
+          ))}
+        </div>
+        <p className="auth-kicker">{t("loginKicker")}</p>
         <h2 className="auth-title">
-          {isRegisterMode ? "Account erstellen" : "Willkommen zurueck"}
+          {isRegisterMode ? t("loginCreateTitle") : t("loginWelcomeTitle")}
         </h2>
         <p className="auth-subtitle">
           {isRegisterMode
-            ? "Erstelle dein Konto und starte direkt."
-            : "Melde dich an, um deine Listen weiterzufuehren."}
+            ? t("loginCreateSubtitle")
+            : t("loginWelcomeSubtitle")}
         </p>
 
         <div className="auth-switch" role="tablist" aria-label="Auth Modus">
@@ -79,7 +93,7 @@ export default function Login({ onLogin }: Props) {
               setError("");
             }}
           >
-            Login
+            {t("loginTab")}
           </button>
           <button
             type="button"
@@ -89,13 +103,13 @@ export default function Login({ onLogin }: Props) {
               setError("");
             }}
           >
-            Registrierung
+            {t("registerTab")}
           </button>
         </div>
 
         <div className="auth-form">
           <label className="auth-label" htmlFor="email">
-            E-Mail
+            {t("email")}
           </label>
           <input
             id="email"
@@ -107,13 +121,13 @@ export default function Login({ onLogin }: Props) {
           />
 
           <label className="auth-label" htmlFor="password">
-            Passwort
+            {t("password")}
           </label>
           <input
             id="password"
             className="auth-input"
             type="password"
-            placeholder="Mindestens 6 Zeichen"
+            placeholder={t("passwordPlaceholder")}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
@@ -121,7 +135,7 @@ export default function Login({ onLogin }: Props) {
           {error && <p className="auth-error">{error}</p>}
 
           <button type="button" className="auth-submit" onClick={submit} disabled={isLoading}>
-            {isLoading ? "Bitte warten..." : isRegisterMode ? "Registrieren" : "Einloggen"}
+            {isLoading ? t("pleaseWait") : isRegisterMode ? t("register") : t("signIn")}
           </button>
         </div>
       </div>

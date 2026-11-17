@@ -16,6 +16,9 @@ import {
   updateDoc,
   getDocs,
 } from "firebase/firestore";
+import { importRecipe, RecipeImportError } from "./recipeApi";
+import { LANGUAGES, useI18n } from "./i18n";
+import { DONATION_URL } from "./config";
 
 interface Item {
   id: string;
@@ -26,12 +29,15 @@ interface Item {
 interface SimpleDoc {
   id: string;
   name: string;
+  steps?: string[];
+  servings?: string;
 }
 
 type Page = "shopping" | "menus" | "recipes" | "settings";
 type ConfirmDeleteAction = () => Promise<void>;
 
 export default function App() {
+  const { t, lang, setLang } = useI18n();
   const [user, setUser] = useState<User | null>(null);
   const [page, setPage] = useState<Page>("shopping");
   const [syncing, setSyncing] = useState(false);
@@ -76,11 +82,18 @@ const [deleteConfirmMessage, setDeleteConfirmMessage] = useState("");
 const [deleteConfirmLoading, setDeleteConfirmLoading] = useState(false);
 const [deleteAction, setDeleteAction] = useState<ConfirmDeleteAction | null>(null);
 
+// 📸 Instagram-Import
+const [igUrl, setIgUrl] = useState("");
+const [igCaption, setIgCaption] = useState("");
+const [igShowCaption, setIgShowCaption] = useState(false);
+const [igLoading, setIgLoading] = useState(false);
+const [igError, setIgError] = useState("");
 
 
 
 
-  // ?? Auth
+
+  // Auth
   useEffect(() => {
     return onAuthStateChanged(auth, setUser);
   }, []);
@@ -110,6 +123,8 @@ const [deleteAction, setDeleteAction] = useState<ConfirmDeleteAction | null>(nul
           snap.docs.map((d) => ({
             id: d.id,
             name: d.data().name,
+            steps: d.data().steps,
+            servings: d.data().servings,
           }))
         )
     );
@@ -257,7 +272,7 @@ useEffect(() => {
     if (!checkedItems.length) return;
 
     openDeleteConfirm(
-      `Willst du ${checkedItems.length} ausgewählte Einträge wirklich löschen?`,
+      t("confirmDeleteChecked", { n: checkedItems.length }),
       async () => {
         for (const item of checkedItems) {
           await deleteDoc(
@@ -274,6 +289,63 @@ useEffect(() => {
     if (!name) return;
     await addDoc(collection(db, "users", user.uid, "menus"), { name });
     setMenuInput("");
+  };
+
+  // 📸 Instagram-Link -> neues Menü mit Zutaten, Zubereitung und Link
+  const pasteIgUrl = async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      if (text) setIgUrl(text.trim());
+    } catch {
+      setIgError(t("pasteDenied"));
+    }
+  };
+
+  const importFromInstagram = async () => {
+    const url = igUrl.trim();
+    const caption = igCaption.trim();
+    if (!url && !caption) return;
+    setIgLoading(true);
+    setIgError("");
+    try {
+      const token = await user.getIdToken();
+      const recipe = await importRecipe(token, url, caption, lang);
+
+      const menuRef = await addDoc(collection(db, "users", user.uid, "menus"), {
+        name: recipe.name,
+        steps: recipe.steps,
+        servings: recipe.servings,
+        source: "instagram",
+      });
+      for (const ing of recipe.ingredients) {
+        await addDoc(
+          collection(db, "users", user.uid, "menus", menuRef.id, "products"),
+          { name: ing }
+        );
+      }
+      if (url) {
+        await addDoc(
+          collection(db, "users", user.uid, "menus", menuRef.id, "links"),
+          { url }
+        );
+      }
+
+      setIgUrl("");
+      setIgCaption("");
+      setIgShowCaption(false);
+      setSelectedProducts([]);
+      setSelectedMenu({
+        id: menuRef.id,
+        name: recipe.name,
+        steps: recipe.steps,
+        servings: recipe.servings,
+      });
+    } catch (e) {
+      if (e instanceof RecipeImportError && e.needCaption) setIgShowCaption(true);
+      setIgError(e instanceof Error ? e.message : t("unknownError"));
+    } finally {
+      setIgLoading(false);
+    }
   };
 
   // ➕ Rezept
@@ -294,7 +366,7 @@ useEffect(() => {
 };
 
 const deleteItem = (id: string) => {
-  openDeleteConfirm("Willst du diesen Eintrag wirklich löschen?", async () => {
+  openDeleteConfirm(t("confirmDeleteItem"), async () => {
     await deleteDoc(
       doc(db, "users", user.uid, "shoppingItems", id)
     );
@@ -311,7 +383,7 @@ const updateMenuName = async (menu: SimpleDoc) => {
 };
 
 const deleteMenu = (id: string) => {
-  openDeleteConfirm("Willst du dieses Menue wirklich löschen?", async () => {
+  openDeleteConfirm(t("confirmDeleteMenu"), async () => {
     await deleteDoc(
       doc(db, "users", user.uid, "menus", id)
     );
@@ -328,7 +400,7 @@ const updateRecipeName = async (recipe: SimpleDoc) => {
 };
 
 const deleteRecipe = (id: string) => {
-  openDeleteConfirm("Willst du dieses Rezept wirklich löschen?", async () => {
+  openDeleteConfirm(t("confirmDeleteRecipe"), async () => {
     await deleteDoc(
       doc(db, "users", user.uid, "recipes", id)
     );
@@ -354,7 +426,7 @@ const addMenuProduct = async () => {
   setMenuProductInput("");
 };
 
-// ?? Menü-Produkt umbenennen
+// Menü-Produkt umbenennen
 const updateMenuProductName = async (productId: string) => {
   if (!selectedMenu || !editValue) return;
 
@@ -375,11 +447,11 @@ const updateMenuProductName = async (productId: string) => {
   setEditValue("");
 };
 
-// ??? Menü-Produkt löschen
+// Menü-Produkt löschen
 const deleteMenuProduct = (productId: string) => {
   if (!selectedMenu) return;
 
-  openDeleteConfirm("Willst du dieses Produkt wirklich löschen?", async () => {
+  openDeleteConfirm(t("confirmDeleteProduct"), async () => {
     await deleteDoc(
       doc(
         db,
@@ -437,7 +509,7 @@ const addMenuLink = async () => {
   setMenuLinkInput("");
 };
 
-// ?? Link bearbeiten
+// Link bearbeiten
 const updateMenuLink = async (linkId: string) => {
   if (!selectedMenu || !editValue) return;
 
@@ -458,11 +530,11 @@ const updateMenuLink = async (linkId: string) => {
   setEditValue("");
 };
 
-// ??? Link löschen
+// Link löschen
 const deleteMenuLink = (linkId: string) => {
   if (!selectedMenu) return;
 
-  openDeleteConfirm("Willst du diesen Link wirklich löschen?", async () => {
+  openDeleteConfirm(t("confirmDeleteLink"), async () => {
     await deleteDoc(
       doc(
         db,
@@ -509,7 +581,7 @@ const updateRecipeProductName = async (id: string) => {
 const deleteRecipeProduct = (id: string) => {
   if (!selectedRecipe) return;
 
-  openDeleteConfirm("Willst du dieses Produkt wirklich löschen?", async () => {
+  openDeleteConfirm(t("confirmDeleteProduct"), async () => {
     await deleteDoc(
       doc(db, "users", user.uid, "recipes", selectedRecipe.id, "products", id)
     );
@@ -540,7 +612,7 @@ const updateRecipeLink = async (id: string) => {
 const deleteRecipeLink = (id: string) => {
   if (!selectedRecipe) return;
 
-  openDeleteConfirm("Willst du diesen Link wirklich löschen?", async () => {
+  openDeleteConfirm(t("confirmDeleteLink"), async () => {
     await deleteDoc(
       doc(db, "users", user.uid, "recipes", selectedRecipe.id, "links", id)
     );
@@ -589,7 +661,7 @@ const copySelectedRecipesToMenu = async () => {
 
 const syncLatestVersion = async () => {
   setSyncing(true);
-  setSyncMessage("Synchronisierung läuft...");
+  setSyncMessage(t("syncRunning"));
 
   try {
     if ("serviceWorker" in navigator) {
@@ -604,12 +676,12 @@ const syncLatestVersion = async () => {
       await Promise.all(cacheKeys.map((key) => caches.delete(key)));
     }
 
-    setSyncMessage("Neueste Version wird geladen...");
+    setSyncMessage(t("syncLoading"));
     const basePath = process.env.PUBLIC_URL || "";
     window.location.replace(`${basePath}/?sync=${Date.now()}`);
   } catch (error) {
     console.error("Synchronisierung fehlgeschlagen:", error);
-    setSyncMessage("Synchronisierung fehlgeschlagen. Bitte Seite neu laden.");
+    setSyncMessage(t("syncFailed"));
     setSyncing(false);
   }
 };
@@ -626,7 +698,7 @@ const logout = async () => {
 return (
   <div className="app-container">
     <h1 className="app-title">
-      {user.email?.slice(0, 10)}'s Einkaufsliste 🛒
+      {t("appTitle", { name: user.email?.slice(0, 10) ?? "" })}
     </h1>
 
     {/* ===================== 🛒 EINKAUFSLISTE ===================== */}
@@ -637,7 +709,7 @@ return (
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Produkt"
+            placeholder={t("product")}
             className="app-input"
           />
           <button onClick={addItem} className="add-button"><span>+</span></button>
@@ -664,7 +736,7 @@ return (
                   💾
                 </button>
                 <button onClick={() => setEditingId(null)} className="delete">
-                  ?
+                  ✖
                 </button>
               </>
             ) : (
@@ -688,7 +760,7 @@ return (
         ))}
 
         <button onClick={deleteChecked} className="delete-selected">
-          Ausgewählte löschen
+          {t("deleteSelected")}
         </button>
       </div>
     )}
@@ -696,11 +768,58 @@ return (
     {/* ===================== MENÜS ===================== */}
     {page === "menus" && !selectedMenu && (
       <div className="menus-container">
+        <div className="ig-import">
+          <div className="ig-title">{t("igTitle")}</div>
+          <div className="input-row">
+            <input
+              value={igUrl}
+              onChange={(e) => setIgUrl(e.target.value)}
+              placeholder={t("igPlaceholder")}
+              className="app-input"
+              inputMode="url"
+            />
+            <button onClick={pasteIgUrl} className="edit" type="button">
+              📋
+            </button>
+          </div>
+
+          {igShowCaption && (
+            <textarea
+              value={igCaption}
+              onChange={(e) => setIgCaption(e.target.value)}
+              placeholder={t("igCaptionPlaceholder")}
+              className="app-input ig-caption"
+              rows={5}
+            />
+          )}
+
+          {igError && <p className="ig-error">{igError}</p>}
+
+          <div className="ig-actions">
+            <button
+              onClick={importFromInstagram}
+              className="add-to-shopping"
+              disabled={igLoading || (!igUrl.trim() && !igCaption.trim())}
+            >
+              {igLoading ? t("igLoading") : t("igCreate")}
+            </button>
+            {!igShowCaption && (
+              <button
+                onClick={() => setIgShowCaption(true)}
+                className="back-button"
+                type="button"
+              >
+                {t("igPasteText")}
+              </button>
+            )}
+          </div>
+        </div>
+
         <div className="input-row">
           <input
             value={menuInput}
             onChange={(e) => setMenuInput(e.target.value)}
-            placeholder="Menü"
+            placeholder={t("menu")}
             className="app-input"
           />
           <button onClick={addMenu} className="add-button"><span>+</span></button>
@@ -729,7 +848,7 @@ return (
                   💾
                 </button>
                 <button onClick={() => setEditingId(null)} className="delete">
-                  ?
+                  ✖
                 </button>
               </>
             ) : (
@@ -762,7 +881,7 @@ return (
           <input
             value={menuProductInput}
             onChange={(e) => setMenuProductInput(e.target.value)}
-            placeholder="Produkt hinzufügen"
+            placeholder={t("addProduct")}
             className="app-input"
           />
           <button onClick={addMenuProduct} className="add-button"><span>+</span></button>
@@ -791,7 +910,7 @@ return (
                   💾
                 </button>
                 <button onClick={() => setEditingId(null)} className="delete">
-                  ?
+                  ✖
                 </button>
               </>
             ) : (
@@ -817,13 +936,44 @@ return (
           </div>
         ))}
 
-        <button onClick={selectedToShoppingList} className="add-to-shopping">
-          ➜ Einkaufsliste
-        </button>
+        <div className="ig-actions">
+          <button
+            onClick={() =>
+              setSelectedProducts(
+                selectedProducts.length === menuProducts.length
+                  ? []
+                  : menuProducts.map((p) => p.id)
+              )
+            }
+            className="back-button"
+          >
+            {selectedProducts.length === menuProducts.length && menuProducts.length
+              ? t("selectNone")
+              : t("selectAll")}
+          </button>
+          <button onClick={selectedToShoppingList} className="add-to-shopping">
+            {t("toShopping")}
+          </button>
+        </div>
+
+        {selectedMenu.steps && selectedMenu.steps.length > 0 && (
+          <>
+            <hr />
+            <h3>{t("preparation")}</h3>
+            {selectedMenu.servings && (
+              <p className="settings-text">{selectedMenu.servings}</p>
+            )}
+            <ol className="steps-list">
+              {selectedMenu.steps.map((s, idx) => (
+                <li key={idx}>{s}</li>
+              ))}
+            </ol>
+          </>
+        )}
 
         <hr />
 
-        <h3>🔗 Links</h3>
+        <h3>{t("links")}</h3>
         <div className="input-row">
           <input
             value={menuLinkInput}
@@ -850,7 +1000,7 @@ return (
                   💾
                 </button>
                 <button onClick={() => setEditingId(null)} className="delete">
-                  ?
+                  ✖
                 </button>
               </>
             ) : (
@@ -861,7 +1011,7 @@ return (
                   rel="noreferrer"
                   className="link-text"
                 >
-                  Link
+                  {t("link")}
                 </a>
                 <button
                   onClick={() => {
@@ -884,7 +1034,7 @@ return (
           onClick={() => setSelectedMenu(null)}
           className="back-button"
         >
-          ⬅ Zurück
+          {t("back")}
         </button>
       </div>
     )}
@@ -896,7 +1046,7 @@ return (
           <input
             value={recipeInput}
             onChange={(e) => setRecipeInput(e.target.value)}
-            placeholder="Rezept"
+            placeholder={t("recipe")}
             className="app-input"
           />
           <button onClick={addRecipe} className="add-button"><span>+</span></button>
@@ -932,7 +1082,7 @@ return (
                   💾
                 </button>
                 <button onClick={() => setEditingId(null)} className="delete">
-                  ?
+                  ✖
                 </button>
               </>
             ) : (
@@ -962,7 +1112,7 @@ return (
         ))}
 
         <button onClick={copySelectedRecipesToMenu} className="add-to-menu">
-          ➜ Ausgewählte in Menü
+          {t("toMenu")}
         </button>
       </div>
     )}
@@ -976,7 +1126,7 @@ return (
           <input
             value={recipeProductInput}
             onChange={(e) => setRecipeProductInput(e.target.value)}
-            placeholder="Produkt hinzufügen"
+            placeholder={t("addProduct")}
             className="app-input"
           />
           <button onClick={addRecipeProduct} className="add-button"><span>+</span></button>
@@ -1005,7 +1155,7 @@ return (
                   💾
                 </button>
                 <button onClick={() => setEditingId(null)} className="delete">
-                  ?
+                  ✖
                 </button>
               </>
             ) : (
@@ -1033,7 +1183,7 @@ return (
 
         <hr />
 
-        <h3>🔗 Links</h3>
+        <h3>{t("links")}</h3>
         <div className="input-row">
           <input
             value={recipeLinkInput}
@@ -1060,7 +1210,7 @@ return (
                   💾
                 </button>
                 <button onClick={() => setEditingId(null)} className="delete">
-                  ?
+                  ✖
                 </button>
               </>
             ) : (
@@ -1071,7 +1221,7 @@ return (
                   rel="noreferrer"
                   className="link-text"
                 >
-                  Link
+                  {t("link")}
                 </a>
                 <button
                   onClick={() => {
@@ -1094,7 +1244,7 @@ return (
           onClick={() => setSelectedRecipe(null)}
           className="back-button"
         >
-          ⬅ Zurück
+          {t("back")}
         </button>
       </div>
     )}
@@ -1102,7 +1252,7 @@ return (
     {deleteConfirmOpen && (
       <div className="confirm-overlay" onClick={closeDeleteConfirm}>
         <div className="confirm-modal" onClick={(e) => e.stopPropagation()}>
-          <h3>Löschen bestätigen</h3>
+          <h3>{t("confirmTitle")}</h3>
           <p>{deleteConfirmMessage}</p>
           <div className="confirm-actions">
             <button
@@ -1110,14 +1260,14 @@ return (
               className="back-button"
               disabled={deleteConfirmLoading}
             >
-              Abbrechen
+              {t("cancel")}
             </button>
             <button
               onClick={runDeleteConfirm}
               className="delete"
               disabled={deleteConfirmLoading}
             >
-              {deleteConfirmLoading ? "Lösche..." : "Löschen"}
+              {deleteConfirmLoading ? t("deleting") : t("delete")}
             </button>
           </div>
         </div>
@@ -1127,26 +1277,54 @@ return (
     {/* ===================== BOTTOM NAV ===================== */}
     {page === "settings" && (
       <div className="menus-container">
-        <h2>Einstellungen</h2>
-        <p className="settings-text">
-          Falls die PWA noch eine alte Version zeigt, hier auf Synchronisieren klicken.
-          Die App lädt danach direkt die neueste Version.
-        </p>
+        <h2>{t("settingsTitle")}</h2>
+
+        <h3>🌐 {t("language")}</h3>
+        <div className="ig-actions lang-switch">
+          {LANGUAGES.map((l) => (
+            <button
+              key={l.code}
+              onClick={() => setLang(l.code)}
+              className={lang === l.code ? "add-to-shopping" : "back-button"}
+            >
+              {l.label}
+            </button>
+          ))}
+        </div>
+
+        <hr />
+        <p className="settings-text">{t("syncText")}</p>
         <button
           onClick={syncLatestVersion}
           className="add-to-shopping"
           disabled={syncing}
         >
-          {syncing ? "Synchronisiere..." : "Jetzt synchronisieren"}
+          {syncing ? t("syncing") : t("syncNow")}
         </button>
         <button
           onClick={logout}
           className="delete settings-logout"
           disabled={loggingOut}
         >
-          {loggingOut ? "Logge aus..." : "Logout"}
+          {loggingOut ? t("loggingOut") : t("logout")}
         </button>
         {syncMessage && <p className="settings-text">{syncMessage}</p>}
+
+        {DONATION_URL && (
+          <>
+            <hr />
+            <h3>{t("donateTitle")}</h3>
+            <p className="settings-text">{t("donateText")}</p>
+            <a
+              href={DONATION_URL}
+              target="_blank"
+              rel="noreferrer"
+              className="donate-button"
+            >
+              {t("donateButton")}
+            </a>
+          </>
+        )}
         <div className="settings-footer">
           <a
             href="https://github.com/"
@@ -1154,22 +1332,22 @@ return (
             rel="noreferrer"
             className="settings-link"
           >
-            1. Mein GitHub
+            {t("myGithub")}
           </a>
-          <p className="settings-credit">2. by Nicola</p>
+          <p className="settings-credit">{t("byNicola")}</p>
         </div>
       </div>
     )}
 
     <div className="bottom-nav">
-      <div onClick={() => setPage("shopping")}>🛒<br />Liste</div>
+      <div onClick={() => setPage("shopping")}>🛒<br />{t("navList")}</div>
       <div
         onClick={() => {
           setSelectedMenu(null);
           setPage("menus");
         }}
       >
-        📅<br />Menüs
+        📅<br />{t("navMenus")}
       </div>
       <div
         onClick={() => {
@@ -1177,9 +1355,9 @@ return (
           setPage("recipes");
         }}
       >
-        📖<br />Rezepte
+        📖<br />{t("navRecipes")}
       </div>
-      <div onClick={() => setPage("settings")}>⚙️<br />Einstellungen</div>
+      <div onClick={() => setPage("settings")}>⚙️<br />{t("navSettings")}</div>
     </div>
   </div>
 );
