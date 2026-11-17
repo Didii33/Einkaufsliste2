@@ -446,3 +446,21 @@ hr {
 .ig-import .input-row {
   margin: 0;
 }
+
+.lang-switch {
+  margin: 4px 2px 12px;
+}
+
+.donate-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 9px 16px;
+  border-radius: 10px;
+  background: #ffc439;
+  color: #003087;
+  font-weight: 700;
+  text-decoration: none;
+  margin: 4px 2px 8px;
+}

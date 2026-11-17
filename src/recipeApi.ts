@@ -20,7 +20,8 @@ export class RecipeImportError extends Error {
 export async function importRecipe(
   idToken: string,
   url: string,
-  caption?: string
+  caption?: string,
+  lang: string = "de"
 ): Promise<ImportedRecipe> {
   let res: Response;
   try {
@@ -30,10 +31,14 @@ export async function importRecipe(
         "Content-Type": "application/json",
         Authorization: `Bearer ${idToken}`,
       },
-      body: JSON.stringify({ url, caption: caption || undefined }),
+      body: JSON.stringify({ url, caption: caption || undefined, lang }),
     });
   } catch {
-    throw new RecipeImportError("Server nicht erreichbar. Ist die Worker-URL eingetragen?");
+    throw new RecipeImportError(
+      lang === "en"
+        ? "Server not reachable. Is the worker URL set?"
+        : "Server nicht erreichbar. Ist die Worker-URL eingetragen?"
+    );
   }
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {

@@ -55,6 +55,7 @@ export default {
       return json({ error: "Ungültige Anfrage" }, 400);
     }
     const url = (body.url || "").trim();
+    const en = body.lang === "en";
     let text = (body.caption || "").trim();
 
     // 2) Caption von Instagram holen (falls nicht mitgeschickt)
@@ -68,7 +69,9 @@ export default {
     if (!text || text.length < 15) {
       return json(
         {
-          error: "Konnte die Beschreibung nicht automatisch lesen. Kopiere sie in Instagram und füge sie unten ein.",
+          error: en
+            ? "Could not read the description automatically. Copy it in Instagram and paste it below."
+            : "Konnte die Beschreibung nicht automatisch lesen. Kopiere sie in Instagram und füge sie unten ein.",
           needCaption: true,
         },
         422
@@ -77,11 +80,13 @@ export default {
 
     // 3) KI macht daraus ein Rezept
     try {
-      const recipe = await extractRecipe(text, cfg);
+      const recipe = await extractRecipe(text, cfg, en);
       if (!recipe.ingredients || !recipe.ingredients.length) {
         return json(
           {
-            error: "Im Text wurde kein Rezept gefunden. Steht es evtl. nur im Video? Dann Zutaten von Hand einfügen.",
+            error: en
+              ? "No recipe found in the text. Maybe it's only in the video? Then add the ingredients manually."
+              : "Im Text wurde kein Rezept gefunden. Steht es evtl. nur im Video? Dann Zutaten von Hand einfügen.",
             needCaption: true,
           },
           422
@@ -146,7 +151,10 @@ function htmlToText(s) {
 
 // ---------- Claude ----------
 
-async function extractRecipe(text, cfg) {
+async function extractRecipe(text, cfg, en = false) {
+  const language = en
+    ? "Alles auf Englisch"
+    : 'Alles auf Deutsch (Schweizer Schreibweise, "ss" statt "ß")';
   const prompt = `Hier ist die Beschreibung eines Instagram-Kochvideos:
 
 <beschreibung>
@@ -155,14 +163,14 @@ ${text.slice(0, 8000)}
 
 Extrahiere das Rezept und antworte NUR mit JSON in diesem Format:
 {
-  "name": "kurzer Gerichtname auf Deutsch",
+  "name": "kurzer Gerichtname",
   "servings": "z.B. 2 Portionen (leer wenn unbekannt)",
   "ingredients": ["200 g Spaghetti", "2 Knoblauchzehen", "1 EL Olivenöl"],
   "steps": ["Schritt 1 ...", "Schritt 2 ..."]
 }
 
 Regeln:
-- Alles auf Deutsch (Schweizer Schreibweise, "ss" statt "ß"), Mengen in metrischen Einheiten (g, ml, EL, TL, Stk.).
+- ${language}, Mengen in metrischen Einheiten (g, ml, EL, TL, Stk.).
 - Jede Zutat als kurzer Einkaufslisten-Eintrag: Menge + Zutat.
 - Keine Hashtags, Emojis oder Werbung.
 - Gibt es kein Rezept im Text, gib "ingredients": [] zurück.`;

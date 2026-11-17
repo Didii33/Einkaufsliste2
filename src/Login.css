@@ -164,3 +164,27 @@
     border-radius: 16px;
   }
 }
+
+.auth-lang {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  display: flex;
+  gap: 4px;
+}
+
+.auth-lang-btn {
+  border: 1px solid #dfe7f2;
+  background: #fff;
+  color: #577290;
+  border-radius: 8px;
+  padding: 4px 8px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.auth-lang-btn.is-active {
+  background: #1ea672;
+  border-color: #1ea672;
+  color: #fff;
+}
