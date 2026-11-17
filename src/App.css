@@ -398,3 +398,51 @@ hr {
   }
 }
 
+
+/* 📸 Instagram-Import */
+.ig-import {
+  background: var(--surface-solid);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 10px;
+  margin-bottom: 14px;
+  box-shadow: var(--shadow-card);
+}
+
+.ig-title {
+  font-weight: 700;
+  margin: 2px 2px 8px;
+}
+
+.ig-caption {
+  width: 100%;
+  margin-top: 8px;
+  resize: vertical;
+  font-family: inherit;
+}
+
+.ig-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.ig-error {
+  color: var(--danger);
+  font-size: 14px;
+  margin: 8px 2px 0;
+}
+
+.steps-list {
+  padding-left: 22px;
+  line-height: 1.5;
+}
+
+.steps-list li {
+  margin-bottom: 8px;
+}
+
+.ig-import .input-row {
+  margin: 0;
+}

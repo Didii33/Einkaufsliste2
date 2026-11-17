@@ -16,6 +16,7 @@ import {
   updateDoc,
   getDocs,
 } from "firebase/firestore";
+import { importRecipe, RecipeImportError } from "./recipeApi";
 
 interface Item {
   id: string;
@@ -26,6 +27,8 @@ interface Item {
 interface SimpleDoc {
   id: string;
   name: string;
+  steps?: string[];
+  servings?: string;
 }
 
 type Page = "shopping" | "menus" | "recipes" | "settings";
@@ -76,6 +79,13 @@ const [deleteConfirmMessage, setDeleteConfirmMessage] = useState("");
 const [deleteConfirmLoading, setDeleteConfirmLoading] = useState(false);
 const [deleteAction, setDeleteAction] = useState<ConfirmDeleteAction | null>(null);
 
+// 📸 Instagram-Import
+const [igUrl, setIgUrl] = useState("");
+const [igCaption, setIgCaption] = useState("");
+const [igShowCaption, setIgShowCaption] = useState(false);
+const [igLoading, setIgLoading] = useState(false);
+const [igError, setIgError] = useState("");
+
 
 
 
@@ -110,6 +120,8 @@ const [deleteAction, setDeleteAction] = useState<ConfirmDeleteAction | null>(nul
           snap.docs.map((d) => ({
             id: d.id,
             name: d.data().name,
+            steps: d.data().steps,
+            servings: d.data().servings,
           }))
         )
     );
@@ -274,6 +286,63 @@ useEffect(() => {
     if (!name) return;
     await addDoc(collection(db, "users", user.uid, "menus"), { name });
     setMenuInput("");
+  };
+
+  // 📸 Instagram-Link -> neues Menü mit Zutaten, Zubereitung und Link
+  const pasteIgUrl = async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      if (text) setIgUrl(text.trim());
+    } catch {
+      setIgError("Einfügen nicht erlaubt – Link bitte manuell einfügen.");
+    }
+  };
+
+  const importFromInstagram = async () => {
+    const url = igUrl.trim();
+    const caption = igCaption.trim();
+    if (!url && !caption) return;
+    setIgLoading(true);
+    setIgError("");
+    try {
+      const token = await user.getIdToken();
+      const recipe = await importRecipe(token, url, caption);
+
+      const menuRef = await addDoc(collection(db, "users", user.uid, "menus"), {
+        name: recipe.name,
+        steps: recipe.steps,
+        servings: recipe.servings,
+        source: "instagram",
+      });
+      for (const ing of recipe.ingredients) {
+        await addDoc(
+          collection(db, "users", user.uid, "menus", menuRef.id, "products"),
+          { name: ing }
+        );
+      }
+      if (url) {
+        await addDoc(
+          collection(db, "users", user.uid, "menus", menuRef.id, "links"),
+          { url }
+        );
+      }
+
+      setIgUrl("");
+      setIgCaption("");
+      setIgShowCaption(false);
+      setSelectedProducts([]);
+      setSelectedMenu({
+        id: menuRef.id,
+        name: recipe.name,
+        steps: recipe.steps,
+        servings: recipe.servings,
+      });
+    } catch (e) {
+      if (e instanceof RecipeImportError && e.needCaption) setIgShowCaption(true);
+      setIgError(e instanceof Error ? e.message : "Unbekannter Fehler");
+    } finally {
+      setIgLoading(false);
+    }
   };
 
   // ➕ Rezept
@@ -696,6 +765,53 @@ return (
     {/* ===================== MENÜS ===================== */}
     {page === "menus" && !selectedMenu && (
       <div className="menus-container">
+        <div className="ig-import">
+          <div className="ig-title">📸 Menü aus Instagram-Video</div>
+          <div className="input-row">
+            <input
+              value={igUrl}
+              onChange={(e) => setIgUrl(e.target.value)}
+              placeholder="Instagram-Link einfügen"
+              className="app-input"
+              inputMode="url"
+            />
+            <button onClick={pasteIgUrl} className="edit" type="button">
+              📋
+            </button>
+          </div>
+
+          {igShowCaption && (
+            <textarea
+              value={igCaption}
+              onChange={(e) => setIgCaption(e.target.value)}
+              placeholder="Beschreibung des Videos hier einfügen (in Instagram: Text antippen → kopieren)"
+              className="app-input ig-caption"
+              rows={5}
+            />
+          )}
+
+          {igError && <p className="ig-error">{igError}</p>}
+
+          <div className="ig-actions">
+            <button
+              onClick={importFromInstagram}
+              className="add-to-shopping"
+              disabled={igLoading || (!igUrl.trim() && !igCaption.trim())}
+            >
+              {igLoading ? "⏳ Rezept wird erstellt..." : "✨ Menü erstellen"}
+            </button>
+            {!igShowCaption && (
+              <button
+                onClick={() => setIgShowCaption(true)}
+                className="back-button"
+                type="button"
+              >
+                Text einfügen
+              </button>
+            )}
+          </div>
+        </div>
+
         <div className="input-row">
           <input
             value={menuInput}
@@ -817,9 +933,40 @@ return (
           </div>
         ))}
 
-        <button onClick={selectedToShoppingList} className="add-to-shopping">
-          ➜ Einkaufsliste
-        </button>
+        <div className="ig-actions">
+          <button
+            onClick={() =>
+              setSelectedProducts(
+                selectedProducts.length === menuProducts.length
+                  ? []
+                  : menuProducts.map((p) => p.id)
+              )
+            }
+            className="back-button"
+          >
+            {selectedProducts.length === menuProducts.length && menuProducts.length
+              ? "Keine auswählen"
+              : "Alle auswählen"}
+          </button>
+          <button onClick={selectedToShoppingList} className="add-to-shopping">
+            ➜ Einkaufsliste
+          </button>
+        </div>
+
+        {selectedMenu.steps && selectedMenu.steps.length > 0 && (
+          <>
+            <hr />
+            <h3>👨‍🍳 Zubereitung</h3>
+            {selectedMenu.servings && (
+              <p className="settings-text">{selectedMenu.servings}</p>
+            )}
+            <ol className="steps-list">
+              {selectedMenu.steps.map((s, idx) => (
+                <li key={idx}>{s}</li>
+              ))}
+            </ol>
+          </>
+        )}
 
         <hr />
 

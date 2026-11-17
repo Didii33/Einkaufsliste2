@@ -40,3 +40,14 @@ Falls eine alte Version angezeigt wird:
 In der App zu ⚙️ Einstellungen gehen
 Jetzt synchronisieren drücken
 Dadurch werden Cache/Service-Worker bereinigt und die neueste Version geladen
+
+Menü aus Instagram-Video
+Im Tab „Menüs“ einen Instagram-Link einfügen → „Menü erstellen“. Die KI liest die Videobeschreibung und legt ein Menü an: Zutaten als Produkte, Zubereitung und der Link zum Video.
+Steht das Rezept nicht in der Beschreibung oder kann sie nicht gelesen werden: „Text einfügen“ und die Beschreibung von Hand reinkopieren.
+
+Einrichtung (einmalig)
+1. Cloudflare Dashboard → Workers & Pages → Create → Worker, Name z. B. „rezept“
+2. Code aus rezept-worker/worker.js einfügen → Deploy
+3. Worker → Settings → Variables and Secrets → Secret ANTHROPIC_API_KEY (von console.anthropic.com)
+4. Optional: Variable ALLOWED_EMAILS = deine E-Mail(s), damit nur du den Import nutzen kannst
+5. Worker-URL in src/recipeApi.ts eintragen → npm run deploy
